@@ -146,3 +146,22 @@ print("멀티헤드 어텐션 적용 후 형태: ", after_attention_embeddings.s
     
 # 출력 결과
 # torch.Size([1, 5, 16])
+
+
+
+## 레이어 정규화
+norm = nn.LayerNorm(normalized_shape=(16,))  # 마지막 차원을 정규화
+after_norm_embeddings = norm(after_attention_embeddings)
+print("레이어 정규화 적용 후 형태: ", after_norm_embeddings.shape)
+
+# 정규화 결과 확인
+print("평균:", after_norm_embeddings.mean(dim=-1).data)
+print("표준편차:", after_norm_embeddings.std(dim=-1).data)
+
+# 출력 결과
+# torch.Size([1, 5, 16])
+# 평균: tensor([[0., 0., 0., 0., 0.]])
+# 표준편차: tensor([[1., 1., 1., 1., 1.]])
+
+
+

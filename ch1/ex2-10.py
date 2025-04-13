@@ -146,3 +146,68 @@ print("멀티헤드 어텐션 적용 후 형태: ", after_attention_embeddings.s
     
 # 출력 결과
 # torch.Size([1, 5, 16])
+
+
+
+## 레이어 정규화
+norm = nn.LayerNorm(normalized_shape=(16,))  # 마지막 차원을 정규화
+after_norm_embeddings = norm(after_attention_embeddings)
+print("레이어 정규화 적용 후 형태: ", after_norm_embeddings.shape)
+
+# 정규화 결과 확인
+print("평균:", after_norm_embeddings.mean(dim=-1).data)
+print("표준편차:", after_norm_embeddings.std(dim=-1).data)
+
+# 출력 결과
+# torch.Size([1, 5, 16])
+# 평균: tensor([[0., 0., 0., 0., 0.]])
+# 표준편차: tensor([[1., 1., 1., 1., 1.]])
+
+
+
+## 피드 포워드 층 코드
+class PreLayerNormFeedForward(nn.Module):
+    def __init__(self, d_model, dim_feedforward, dropout=0.1):
+        super().__init__()
+        self.linear1 = nn.Linear(d_model, dim_feedforward)  # 선형 층 1
+        self.linear2 = nn.Linear(dim_feedforward, d_model)  # 선형 층 2
+        self.dropout1 = nn.Dropout(dropout) # 드롭아웃 층 1
+        self.dropout2 = nn.Dropout(dropout) # 드롭아웃 층 2
+        self.activation = nn.GELU() # 활성화 함수
+        self.norm = nn.LayerNorm(d_model) # 정규화 층
+        
+    def forward(self, src):
+        x = self.norm(src)
+        x = x + self.linear2(self.dropout1(self.activation(self.linear1(x))))
+        x = self.dropout2(x)
+        return x
+
+# 피드포워드 층 정보 출력
+print("\n피드포워드 층 정보:")
+ff = PreLayerNormFeedForward(d_model=16, dim_feedforward=64)
+print("첫 번째 선형 층:", ff.linear1)
+print("두 번째 선형 층:", ff.linear2)
+print("드롭아웃 층 1:", ff.dropout1)
+print("드롭아웃 층 2:", ff.dropout2)
+print("활성화 함수:", ff.activation)
+print("정규화 층:", ff.norm)
+
+# 피드포워드 층 적용
+after_ff_embeddings = ff(after_norm_embeddings)
+print("\n피드포워드 층 적용 후 형태:", after_ff_embeddings.shape)
+
+# 출력 결과
+# 피드포워드 층 정보:
+# 첫 번째 선형 층: Linear(in_features=16, out_features=64, bias=True)
+# 두 번째 선형 층: Linear(in_features=64, out_features=16, bias=True)
+# 드롭아웃 층 1: Dropout(p=0.1, inplace=False)
+# 드롭아웃 층 2: Dropout(p=0.1, inplace=False)
+# 활성화 함수: GELU()
+# 정규화 층: LayerNorm((16,), eps=1e-05, elementwise_affine=True)
+# 
+# 피드포워드 층 적용 후 형태: torch.Size([1, 5, 16])
+
+
+
+    
+    
