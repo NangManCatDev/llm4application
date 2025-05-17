@@ -1,10 +1,13 @@
-## 모델 학습에 사용할 연합 뉴스 데이터셋 다운로드
+## 모델 학습에 사용할 KLUE YNAT 데이터셋 다운로드
 from datasets import load_dataset
 
+# KLUE YNAT 데이터셋 로드
+# train: 훈련 데이터셋
+# validation: 검증 데이터셋
 klue_tc_train = load_dataset('klue', 'ynat', split='train')
 klue_tc_eval = load_dataset('klue', 'ynat', split='validation')
 
-
+# 데이터셋 정보 출력
 print("훈련 데이터셋 샘플 수: ")
 print(klue_tc_train)
 print("검증 데이터셋 샘플 수: ")
@@ -15,6 +18,9 @@ print(klue_tc_train[0])
 
 
 ## 사용하지 않는 불필요한 칼럼 제거
+# guid: 고유 식별자
+# url: 뉴스 기사 URL
+# date: 뉴스 기사 날짜
 klue_tc_train = klue_tc_train.remove_columns(['guid', 'url', 'date'])
 klue_tc_eval = klue_tc_eval.remove_columns(['guid', 'url', 'date'])
 
@@ -28,19 +34,25 @@ print(klue_tc_train)
 
 
 ## 카테고리를 문자로 표기한 label_str 칼럼 추가
+# 레이블 정보 확인
 klue_tc_train.features['label']
 # ClassLabel(names=['IT과학', '경제', '사회', '생활문화', '세계', '스포츠', '정치']), id=None)
 
+# 레이블 인덱스를 문자열로 변환 예시
 klue_tc_train.features['label'].int2str(1)
 # '경제'
 
+# 레이블 변환을 위한 레이블 객체 저장
 klue_tc_label = klue_tc_train.features['label']
 
-
+# 레이블을 문자열로 변환하는 함수 정의
 def make_str_label(batch):
     batch['label_str'] = klue_tc_label.int2str(batch['label'])
     return batch
 
+# 훈련 데이터셋에 문자열 레이블 추가
+# batched=True: 배치 단위로 처리
+# batch_size=1000: 한 번에 처리할 배치 크기
 klue_tc_train = klue_tc_train.map(make_str_label, batched=True, batch_size=1000)
 
 print("카테고리 문자로 표기한 label_str 칼럼 추가 후 훈련 데이터셋 첫 번째 샘플: ")
